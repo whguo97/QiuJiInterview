@@ -1,34 +1,24 @@
-Usage
-=====
+简单请求和非简单请求
+================
 
-.. _installation:
+- 首先我们来了解一下简单请求和非简单请求，如果同时满足下面两个条件，就属于简单请求：
+  a. 请求方法是 HEAD、GET、POST 三种之一；
+  b. HTTP 头信息不超过右边着几个字段：Accept、Accept-Language、Content-Language、Last-Event-IDContent-Type 只限于三个值 application/x-www-form-urlencoded、multipart/form-data、text/plain；
+  ○ 凡是不同时满足这两个条件的，都属于非简单请求。
+浏览器处理简单请求和非简单请求的方式不一样：
+简单请求
+● 对于简单请求，浏览器会在头信息中增加 Origin 字段后直接发出，Origin 字段用来说明，本次请求来自的哪个源（协议+域名+端口）。
+● 如果服务器发现 Origin 指定的源不在许可范围内，服务器会返回一个正常的 HTTP 回应，浏览器取到回应之后发现回应的头信息中没有包含 Access-Control-Allow-Origin 字段，就抛出一个错误给 XHR 的 error 事件；
+● 如果服务器发现 Origin 指定的域名在许可范围内，服务器返回的响应会多出几个 Access-Control- 开头的头信息字段。
+非简单请求
+● 非简单请求是那种对服务器有特殊要求的请求，比如请求方法是 PUT 或 DELETE，或 Content-Type 值为 application/json。浏览器会在正式通信之前，发送一次 HTTP 预检 OPTIONS 请求，先询问服务器，当前网页所在的域名是否在服务器的许可名单之中，以及可以使用哪些 HTTP 请求方法和头信息字段。只有得到肯定答复，浏览器才会发出正式的 XHR 请求，否则报错。
+跨域
+浏览器当前访问的网站向另一个网站发送请求获取数据的过程就是跨域请求。
+● 跨域是浏览器的同源策略决定的，是一个重要的浏览器安全策略，用于限制一个 origin 的文档或者它加载的脚本与另一个源的资源进行交互，它能够帮助阻隔恶意文档，减少可能被攻击的媒介，可以使用 CORS 配置解除这个限制。
+正向代理和反向代理
+正向代理
+一般的访问流程是客户端直接向目标服务器发送请求并获取内容，使用正向代理后，客户端改为向代理服务器发送请求，并指定目标服务器，然后由代理服务器和原始服务器通信，转交请求获得的内容，再返回客户端，正向代理隐藏了真实的客户端，为客户端收发请求，使真实的客户端对服务器不可见。
 
-Installation
-------------
-
-To use Lumache, first install it using pip:
-
-.. code-block:: console
-
-   (.venv) $ pip install lumache
-
-Creating recipes
-----------------
-
-To retrieve a list of random ingredients,
-you can use the ``lumache.get_random_ingredients()`` function:
-
-.. autofunction:: lumache.get_random_ingredients
-
-The ``kind`` parameter should be either ``"meat"``, ``"fish"``,
-or ``"veggies"``. Otherwise, :py:func:`lumache.get_random_ingredients`
-will raise an exception.
-
-.. autoexception:: lumache.InvalidKindError
-
-For example:
-
->>> import lumache
->>> lumache.get_random_ingredients()
-['shells', 'gorgonzola', 'parsley']
-
+反向代理
+● 与一般访问流程相比，使用反向代理后，直接收到请求的服务器是代理服务器，然后将请求转发给内部网络上真正进行处理的服务器，得到的结果返回给客户端。
+● 反向代理隐藏了真实的服务器，为服务器收发请求，使真实服务器对客户端不可见。一般在处理跨域请求的时候比较常用。现在基本上所有的大型网站都设置了反向代理。
